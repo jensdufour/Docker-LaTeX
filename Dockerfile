@@ -12,9 +12,9 @@ RUN cp biber /usr/bin/biber
 COPY *.tex ./
 COPY *.bib ./
 # first run - keep files for biber
-RUN tectonic --keep-intermediates --reruns 0 main.tex
+RUN tectonic --keep-intermediates --reruns 0 bachproef-tin.tex
 # do the biber
-RUN biber main
+RUN biber bachproef-tin
 # one last tectonic run over all files
 RUN for f in *.tex; do tectonic $f; done
 
