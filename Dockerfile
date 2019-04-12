@@ -1,4 +1,4 @@
-FROM alpine:latest AS docker-latex
+FROM frolvlad/alpine-glibc AS docker-latex
 # Install necessary fonts for HoGent
 COPY fonts/* /usr/local/share/fonts/
 # Enable Edge Repository
