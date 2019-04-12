@@ -1,6 +1,6 @@
 FROM frolvlad/alpine-glibc AS docker-latex
 # Install necessary fonts for HoGent
-COPY fonts/* /usr/local/share/fonts/
+COPY ./fonts/* /usr/local/share/fonts/
 # Enable Edge Repository
 RUN sed -i -e 's/v3\.4/edge/g' /etc/apk/repositories
 # Install Texlive and Biber
