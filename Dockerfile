@@ -1,20 +1,36 @@
-FROM frolvlad/alpine-glibc AS docker-latex
-# Install necessary fonts for HoGent
+FROM rust:latest as builder
+
+RUN apt-get update && apt-get install -y libfontconfig1-dev libgraphite2-dev libharfbuzz-dev libicu-dev zlib1g-dev
+RUN cargo install tectonic --force --vers 0.1.11
+
+WORKDIR /usr/src/tex
+RUN wget 'https://sourceforge.net/projects/biblatex-biber/files/biblatex-biber/current/binaries/Linux/biber-linux_x86_64.tar.gz'
+RUN tar -xvzf biber-linux_x86_64.tar.gz
+RUN chmod +x biber
+RUN cp biber /usr/bin/biber
+
+COPY *.tex ./
+COPY *.bib ./
+# first run - keep files for biber
+RUN tectonic --keep-intermediates --reruns 0 main.tex
+# do the biber
+RUN biber main
+# one last tectonic run over all files
+RUN for f in *.tex; do tectonic $f; done
+
+# use a lightweight debian - no need for whole rust environment
+FROM debian:stretch-slim 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libfontconfig1 libgraphite2-3 libharfbuzz0b libicu57 zlib1g libharfbuzz-icu0 libssl1.1 ca-certificates \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* 
+
+# copy tectonic binary to new image
+COPY --from=builder /usr/local/cargo/bin/tectonic /usr/bin/
+# reuse tectonic cache from compiling tex files
+COPY --from=builder /root/.cache/Tectonic/ /root/.cache/Tectonic/
+# copy biber binary to new image
+COPY --from=builder /usr/bin/biber /usr/bin/ 
+# copy necessary HoGent fonts
 COPY ./fonts/* /usr/local/share/fonts/
-# Enable Edge Repository
-RUN sed -i -e 's/v3\.4/edge/g' /etc/apk/repositories
-# Install Texlive and Biber
-RUN apk update\
-    && apk add texlive-full\
-    texlive-xetex\
-    biber\
-    make\
-    rsync\
-    tar\
-    libarchive-tools\
-    gmp\
-    curl
-# Install Pandoc
-RUN curl -Lsf 'https://github.com/jgm/pandoc/releases/download/1.17.2/pandoc-1.17.2-1-amd64.deb'\
-    | bsdtar xOf - data.tar.gz\
-    | tar xvz --strip-components 2 -C /usr/local
+
+WORKDIR /usr/src/tex
