@@ -6,8 +6,13 @@ RUN sed -i -e 's/v3\.4/edge/g' /etc/apk/repositories
 # Install Texlive and Biber
 RUN apk update\
     && apk add texlive-full\
+    texlive-xetex\
     biber\
     make\
+    rsync\
+    tar\
+    libarchive-tools\
+    gmp\
     curl
 # Install Pandoc
 RUN curl -Lsf 'https://github.com/jgm/pandoc/releases/download/1.17.2/pandoc-1.17.2-1-amd64.deb'\
